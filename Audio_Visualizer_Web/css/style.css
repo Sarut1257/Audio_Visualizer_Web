@@ -62,3 +62,37 @@ input[type="file"] {
     border-radius: 5px;
     color: #1a531f;
 }
+/* เพิ่มต่อท้ายไฟล์ G:\University_BUU\Project\Audio_Visualizer_Web\css\style.css */
+
+#player-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 15px 30px;
+    border-radius: 50px;
+    display: none; /* ซ่อนไว้ก่อนจนกว่าจะเลือกเพลง */
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: 1px solid #508d4e;
+}
+
+input[type="range"] {
+    width: 300px;
+    cursor: pointer;
+    accent-color: #508d4e;
+}
+
+.control-btn {
+    background: #508d4e;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+}

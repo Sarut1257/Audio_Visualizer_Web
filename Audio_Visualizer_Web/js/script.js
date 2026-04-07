@@ -1,82 +1,79 @@
 // G:\University_BUU\Project\Audio_Visualizer_Web\js\script.js
 let audioCtx, analyser, source, dataArray, bufferLength;
+let audio = new Audio(); // สร้าง Audio Object ส่วนกลาง
+
 const canvas = document.createElement('canvas');
-// เพิ่ม class ให้ canvas เพื่อคุม z-index
-canvas.className = 'visualizer-canvas'; 
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
-function initVisualizer(audioElement) {
+const controls = document.getElementById('player-controls');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const seekBar = document.getElementById('seekBar');
+
+// 1. ฟังก์ชันเริ่มระบบ Visualizer
+function initVisualizer() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioCtx.createAnalyser();
-        source = audioCtx.createMediaElementSource(audioElement);
+        source = audioCtx.createMediaElementSource(audio);
         source.connect(analyser);
         analyser.connect(audioCtx.destination);
-        
-        analyser.fftSize = 256; // ความละเอียดของแท่งกราฟ
+        analyser.fftSize = 256;
         bufferLength = analyser.frequencyBinCount;
         dataArray = new Uint8Array(bufferLength);
-        
         animate();
     }
 }
 
+// 2. ฟังก์ชันวาด (คงเดิมแต่ปรับสีธรรมชาติ)
 function animate() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    
-    // เคลียร์ Canvas ให้สะอาด
-    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     analyser.getByteFrequencyData(dataArray);
 
     const barWidth = (canvas.width / bufferLength) * 1.5;
     let x = 0;
-
     for (let i = 0; i < bufferLength; i++) {
         let barHeight = dataArray[i] * 2.5;
-        
-        // --- ส่วนที่แก้เพื่อสีธรรมชาติ ---
-        // ใช้ HSL เพื่อไล่เฉดสีเขียวธรรมชาติ
-        // Hue: 90-150 คือช่วงสีเขียว
-        // Saturation: 40-70% ไม่สดเกินไป
-        // Lightness: 50% กำลังดี
-        const hue = 120 + (i * 0.5); // เขียวใบไม้
-        const saturation = 50 + (dataArray[i] / 5); // สีสดขึ้นตามความดัง
-        const lightness = 60 - (i / 5); // สีเข้มขึ้นตามความถี่สูง
-
-        ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-        
-        // วาดแท่งกราฟโดยให้มีความโค้งเล็กน้อย ดูเป็นธรรมชาติ
-        drawRoundedRect(ctx, x, canvas.height - barHeight, barWidth, barHeight, 5);
-
+        const hue = 120 + (i * 0.5);
+        ctx.fillStyle = `hsl(${hue}, 50%, 50%)`;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
         x += barWidth + 2;
+    }
+    
+    // อัปเดตแถบ Seek Bar ตามเวลาเพลง
+    if (!audio.paused) {
+        seekBar.value = (audio.currentTime / audio.duration) * 100;
     }
     requestAnimationFrame(animate);
 }
 
-// ฟังก์ชันช่วยวาดสี่เหลี่ยมมุมโค้ง
-function drawRoundedRect(ctx, x, y, width, height, radius) {
-    if (width < 2 * radius) radius = width / 2;
-    if (height < 2 * radius) radius = height / 2;
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + width, y, x + width, y + height, radius);
-    ctx.arcTo(x + width, y + height, x, y + height, radius);
-    ctx.arcTo(x, y + height, x, y, radius);
-    ctx.arcTo(x, y, x + width, y, radius);
-    ctx.closePath();
-    ctx.fill();
-}
-
-// ฟังก์ชันสำหรับ Handle ไฟล์เพลง
+// 3. Event: เมื่อเลือกไฟล์
 document.getElementById('audioFile').onchange = function(e) {
-    const files = this.files;
-    if (files.length > 0) {
-        const audio = new Audio(URL.createObjectURL(files[0]));
-        // ซ่อนเมนูเมื่อเล่น
-        document.getElementById('container').style.display = 'none'; 
+    const file = e.target.files[0];
+    if (file) {
+        audio.src = URL.createObjectURL(file);
+        document.getElementById('container').style.display = 'none'; // ซ่อนเมนูแรก
+        controls.style.display = 'flex'; // โชว์ตัวควบคุม
         audio.play();
-        initVisualizer(audio);
+        initVisualizer();
     }
+};
+
+// 4. ปุ่ม Play/Pause
+playPauseBtn.onclick = function() {
+    if (audio.paused) {
+        audio.play();
+        this.innerText = "II"; // สัญลักษณ์ Pause
+    } else {
+        audio.pause();
+        this.innerText = "▶"; // สัญลักษณ์ Play
+    }
+};
+
+// 5. เลื่อนช่วงเวลาเพลง (Seek)
+seekBar.oninput = function() {
+    const seekTo = audio.duration * (this.value / 100);
+    audio.currentTime = seekTo;
 };
