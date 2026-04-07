@@ -1,0 +1,64 @@
+/* G:\University_BUU\Project\Audio_Visualizer_Web\css\style.css */
+body {
+    margin: 0;
+    /* เปลี่ยนสีพื้นหลังเป็นสีครีม/เทาอ่อน สบายตา */
+    background-color: #fdfdfd; 
+    /* เปลี่ยนสีตัวอักษรเป็นสีเขียวเข้มธรรมชาติ */
+    color: #1a531f; 
+    font-family: 'Consolas', monospace;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#container {
+    text-align: center;
+    z-index: 10;
+    /* เปลี่ยนเป็นสีขาวโปร่งแสง */
+    background: rgba(255, 255, 255, 0.9); 
+    padding: 30px;
+    /* ขอบสีเขียวอ่อน */
+    border: 2px solid #508d4e; 
+    border-radius: 15px;
+    /* เงาจางๆ ดูมีมิติ */
+    box-shadow: 0 4px 15px rgba(80, 141, 78, 0.3); 
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* ทำให้ Canvas อยู่หลัง Container */
+    z-index: 1; 
+}
+
+button {
+    /* ปุ่มสีเขียวธรรมชาติ */
+    background: #508d4e; 
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+button:hover {
+    /* Hover แล้วเป็นสีเขียวอ่อน */
+    background: #e9edc9; 
+    color: #1a531f;
+    box-shadow: 0 0 10px rgba(80, 141, 78, 0.5);
+}
+
+/* ตกแต่ง Input File ให้น่ารักขึ้น */
+input[type="file"] {
+    background: #e9edc9;
+    padding: 10px;
+    border-radius: 5px;
+    color: #1a531f;
+}

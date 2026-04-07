@@ -1,0 +1,10 @@
+# Ignore multimedia files (ไฟล์เพลง J-Pop ขนาดใหญ่)
+Audio_Visualizer_Web/assets/music/*.mp3
+Audio_Visualizer_Web/assets/music/*.wav
+
+# Ignore Windows system files
+Thumbs.db
+Desktop.ini
+
+# Ignore IDE settings
+.vscode/
