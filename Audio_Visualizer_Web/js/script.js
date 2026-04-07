@@ -1,8 +1,8 @@
+
 let audioCtx, analyser, source, dataArray, timeDataArray, bufferLength;
 let audio = new Audio();
 let particles = [];
-let mouse = { x: null, y: null };
-let flashOpacity = 0; // [เพิ่ม] สำหรับเก็บค่าความสว่างของ Flash
+let flashOpacity = 0; 
 
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
@@ -15,6 +15,7 @@ const songTitleDiv = document.getElementById('song-title');
 const fileNameSpan = document.getElementById('file-name');
 const audioFileInput = document.getElementById('audioFile');
 const changeSongBtn = document.getElementById('changeSongBtn');
+const volumeBar = document.getElementById('volumeBar');
 
 function handleFileSelection(file) {
     if (file && file.type.startsWith('audio/')) {
@@ -46,35 +47,32 @@ window.addEventListener('drop', (e) => {
     handleFileSelection(e.dataTransfer.files[0]);
 });
 
-window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-});
+// --- [แก้ไข] ตัด Event Listener mousemove ออกเพื่อให้โค้ดคลีนขึ้น ---
 
 class Particle {
     constructor(x, y, color) {
-        this.x = x; this.y = y;
+        this.x = x; 
+        this.y = y;
         this.size = Math.random() * 3 + 1;
+        // ความเร็วสุ่มเพื่อให้กระจายตัวออกรอบทิศทางอย่างอิสระ
         this.speedX = (Math.random() - 0.5) * 6;
         this.speedY = (Math.random() - 0.5) * 6;
         this.color = color;
         this.life = 100;
     }
     update() {
-        if (mouse.x !== null) {
-            let dx = mouse.x - this.x;
-            let dy = mouse.y - this.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < 200) { this.speedX += dx * 0.01; this.speedY += dy * 0.01; }
-        }
-        this.x += this.speedX; this.y += this.speedY;
+        // [แก้ไข] ตัด Logic ตรวจสอบตำแหน่งเมาส์ออก ให้อนุภาควิ่งตามแรงส่งเดิม
+        this.x += this.speedX; 
+        this.y += this.speedY;
         this.life -= 1.5;
         if (this.size > 0.1) this.size -= 0.05;
     }
     draw() {
         ctx.fillStyle = this.color;
         ctx.globalAlpha = this.life / 100;
-        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); 
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); 
+        ctx.fill();
         ctx.globalAlpha = 1;
     }
 }
@@ -99,7 +97,6 @@ function animate() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    // วาดพื้นหลังปกติ
     ctx.fillStyle = 'rgb(253, 253, 253)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -107,22 +104,18 @@ function animate() {
         analyser.getByteFrequencyData(dataArray);
         analyser.getByteTimeDomainData(timeDataArray);
 
-        // --- [เพิ่ม] Logic สำหรับ Flash on Beat ---
-        // เช็กค่าความถี่ต่ำ (Bass) มักจะอยู่ใน Index ที่ 0-10
         let bassSum = 0;
         for (let i = 0; i < 10; i++) bassSum += dataArray[i];
         let bassAverage = bassSum / 10;
 
-        // ถ้าเบสหนักเกินเกณฑ์ ให้ตั้งค่าความสว่างของ Flash
         if (bassAverage > 210) { 
-            flashOpacity = 0.15; // ความแรงของแสงกะพริบ (0.1 - 0.3 กำลังสวย)
+            flashOpacity = 0.15; 
         }
 
-        // วาด Layer สีเขียวจางๆ ทับพื้นหลังตามค่า flashOpacity
         if (flashOpacity > 0) {
             ctx.fillStyle = `rgba(80, 141, 78, ${flashOpacity})`; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            flashOpacity -= 0.01; // ค่อยๆ จางลงในแต่ละเฟรม
+            flashOpacity -= 0.01; 
         }
 
         const centerX = canvas.width / 2;
@@ -130,7 +123,8 @@ function animate() {
         const radius = 150;
 
         particles.forEach((p, i) => {
-            p.update(); p.draw();
+            p.update(); 
+            p.draw();
             if (p.life <= 0) particles.splice(i, 1);
         });
 
@@ -165,10 +159,27 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
+// Volume Control Logic
+if (volumeBar) {
+    volumeBar.oninput = function() {
+        audio.volume = this.value / 100;
+        const volIcon = document.querySelector('.volume-container span');
+        if (volIcon) {
+            if (this.value == 0) volIcon.innerText = "🔇";
+            else if (this.value < 50) volIcon.innerText = "🔉";
+            else volIcon.innerText = "🔊";
+        }
+    };
+}
+
+// Play/Pause & Seek Logic
 playPauseBtn.onclick = () => {
     initVisualizer().then(() => {
         if (audio.paused) { audio.play(); playPauseBtn.innerText = "II"; }
         else { audio.pause(); playPauseBtn.innerText = "▶"; }
     });
 };
-seekBar.oninput = () => { audio.currentTime = audio.duration * (seekBar.value / 100); };
+
+seekBar.oninput = () => { 
+    audio.currentTime = audio.duration * (seekBar.value / 100); 
+};

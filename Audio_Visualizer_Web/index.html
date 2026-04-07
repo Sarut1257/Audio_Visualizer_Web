@@ -12,12 +12,19 @@
     </div>
 
     <div id="player-controls">
-    <button id="playPauseBtn" class="control-btn">II</button>
-    <input type="range" id="seekBar" value="0" max="100">
-    <button id="changeSongBtn" class="control-btn" style="width: auto; padding: 0 15px; border-radius: 20px;">+ เปลี่ยนเพลง</button>
+        <button id="playPauseBtn" class="control-btn">II</button>
+        <input type="range" id="seekBar" value="0" max="100">
+        
+        <div class="volume-container" style="display: flex; align-items: center; margin: 0 10px;">
+            <span style="margin-right: 5px; font-size: 1rem;">🔊</span>
+            <input type="range" id="volumeBar" min="0" max="100" value="100" style="width: 60px; cursor: pointer;">
+        </div>
+
+        <button id="changeSongBtn" class="control-btn" style="width: auto; padding: 0 15px; border-radius: 20px;">+ เปลี่ยนเพลง</button>
     </div>
-    <div id="song-title" style="position: fixed; top: 20px; width: 100%; text-align: center; z-index: 20; font-weight: bold; font-size: 1.2rem; display: none;">
-    กำลังเล่น: <span id="file-name"></span>
+
+    <div id="song-title" style="position: fixed; top: 20px; width: 100%; text-align: center; z-index: 20; font-weight: bold; font-size: 1.2rem; display: none; color: #1a531f;">
+        กำลังเล่น: <span id="file-name"></span>
     </div>
 
     <script src="js/script.js"></script>
