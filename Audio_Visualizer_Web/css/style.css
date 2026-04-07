@@ -96,3 +96,18 @@ input[type="range"] {
     cursor: pointer;
     font-weight: bold;
 }
+/* G:\University_BUU\Project\Audio_Visualizer_Web\css\style.css */
+
+#song-title {
+    position: fixed;
+    top: 30px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 100; /* ดันขึ้นมาให้อยู่เหนือ Canvas */
+    font-family: 'Consolas', monospace;
+    font-weight: bold;
+    color: #1a531f; /* สีเขียวเข้มแบบที่เราใช้ */
+    text-shadow: 2px 2px 4px rgba(255,255,255,0.8); /* ใส่เงาหลังตัวอักษรกันกลืน */
+    pointer-events: none; /* เพื่อให้เรายังคลิกโดนอย่างอื่นได้ */
+}
