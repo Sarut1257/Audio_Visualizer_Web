@@ -2,35 +2,29 @@ let audioCtx, analyser, source, dataArray, timeDataArray, bufferLength;
 let audio = new Audio();
 let particles = [];
 let mouse = { x: null, y: null };
+let flashOpacity = 0; // [เพิ่ม] สำหรับเก็บค่าความสว่างของ Flash
 
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
-// ดึง Elements
 const controls = document.getElementById('player-controls');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const seekBar = document.getElementById('seekBar');
 const songTitleDiv = document.getElementById('song-title');
 const fileNameSpan = document.getElementById('file-name');
 const audioFileInput = document.getElementById('audioFile');
-const changeSongBtn = document.getElementById('changeSongBtn'); // ปุ่มเปลี่ยนเพลง
+const changeSongBtn = document.getElementById('changeSongBtn');
 
-// --- 1. การจัดการไฟล์และการเปลี่ยนเพลง ---
 function handleFileSelection(file) {
     if (file && file.type.startsWith('audio/')) {
-        // อัปเดตชื่อเพลง
         const nameOnly = file.name.replace(/\.[^/.]+$/, "");
         if (fileNameSpan) fileNameSpan.innerText = nameOnly;
         if (songTitleDiv) songTitleDiv.style.display = 'block';
-
-        // รีเซ็ตเพลงและเริ่มใหม่
         audio.pause();
         audio.src = URL.createObjectURL(file);
-        
         document.getElementById('container').style.display = 'none';
         if (controls) controls.style.display = 'flex';
-        
         initVisualizer().then(() => {
             audio.play();
             playPauseBtn.innerText = "II";
@@ -38,25 +32,20 @@ function handleFileSelection(file) {
     }
 }
 
-// คลิกปุ่มเปลี่ยนเพลง
 if (changeSongBtn) {
     changeSongBtn.onclick = (e) => {
         e.preventDefault();
-        audioFileInput.click(); // สั่งให้ input file เด้งขึ้นมา
+        audioFileInput.click();
     };
 }
 
-// เมื่อเลือกไฟล์ผ่านหน้าต่าง Windows
 audioFileInput.onchange = (e) => handleFileSelection(e.target.files[0]);
-
-// Drag & Drop
 window.addEventListener('dragover', (e) => e.preventDefault());
 window.addEventListener('drop', (e) => {
     e.preventDefault();
     handleFileSelection(e.dataTransfer.files[0]);
 });
 
-// --- 2. ระบบ Particles & Mouse Gravity ---
 window.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
     mouse.y = e.clientY;
@@ -76,10 +65,7 @@ class Particle {
             let dx = mouse.x - this.x;
             let dy = mouse.y - this.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < 200) { 
-                this.speedX += dx * 0.01; 
-                this.speedY += dy * 0.01; 
-            }
+            if (dist < 200) { this.speedX += dx * 0.01; this.speedY += dy * 0.01; }
         }
         this.x += this.speedX; this.y += this.speedY;
         this.life -= 1.5;
@@ -93,7 +79,6 @@ class Particle {
     }
 }
 
-// --- 3. ระบบ Visualizer & Animation ---
 async function initVisualizer() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -113,12 +98,33 @@ async function initVisualizer() {
 function animate() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.fillStyle = 'rgba(253, 253, 253, 0.2)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // วาดพื้นหลังปกติ
+    ctx.fillStyle = 'rgb(253, 253, 253)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     if (analyser) {
         analyser.getByteFrequencyData(dataArray);
         analyser.getByteTimeDomainData(timeDataArray);
+
+        // --- [เพิ่ม] Logic สำหรับ Flash on Beat ---
+        // เช็กค่าความถี่ต่ำ (Bass) มักจะอยู่ใน Index ที่ 0-10
+        let bassSum = 0;
+        for (let i = 0; i < 10; i++) bassSum += dataArray[i];
+        let bassAverage = bassSum / 10;
+
+        // ถ้าเบสหนักเกินเกณฑ์ ให้ตั้งค่าความสว่างของ Flash
+        if (bassAverage > 210) { 
+            flashOpacity = 0.15; // ความแรงของแสงกะพริบ (0.1 - 0.3 กำลังสวย)
+        }
+
+        // วาด Layer สีเขียวจางๆ ทับพื้นหลังตามค่า flashOpacity
+        if (flashOpacity > 0) {
+            ctx.fillStyle = `rgba(80, 141, 78, ${flashOpacity})`; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            flashOpacity -= 0.01; // ค่อยๆ จางลงในแต่ละเฟรม
+        }
+
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const radius = 150;
@@ -152,14 +158,13 @@ function animate() {
             const color = `hsl(${120 + (i * 0.5)}, 50%, 50%)`;
             ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineCap = 'round';
             ctx.beginPath(); ctx.moveTo(xStart, yStart); ctx.lineTo(xEnd, yEnd); ctx.stroke();
-            if (dataArray[i] > 210) for(let j=0; j<2; j++) particles.push(new Particle(xEnd, yEnd, color));
+            if (dataArray[i] > 220) for(let j=0; j<2; j++) particles.push(new Particle(xEnd, yEnd, color));
         }
     }
     if (!audio.paused) seekBar.value = (audio.currentTime / audio.duration) * 100 || 0;
     requestAnimationFrame(animate);
 }
 
-// Play/Pause & Seek
 playPauseBtn.onclick = () => {
     initVisualizer().then(() => {
         if (audio.paused) { audio.play(); playPauseBtn.innerText = "II"; }
